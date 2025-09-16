@@ -11,11 +11,12 @@ This module provides integration with Delta-Chat, enabling the bot to:
 from .bot import DeltaChatBot
 from .config import DeltaChatConfig
 from .message_handler import MessageHandler
-from .commands import CommandProcessor
+from .commands import CommandProcessor, CommandContext
 
 __all__ = [
     'DeltaChatBot',
     'DeltaChatConfig', 
     'MessageHandler',
-    'CommandProcessor'
+    'CommandProcessor',
+    'CommandContext'
 ]
