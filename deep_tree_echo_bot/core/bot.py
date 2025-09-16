@@ -147,12 +147,37 @@ class DeepTreeEchoBot:
         # Get reasoning state
         reasoning_state = await self.task_processor.get_initial_state(task)
         
-        # Combine all features
-        state = torch.cat([
-            task_features,
-            search_context,
-            reasoning_state
-        ])
+        # Ensure all tensors have compatible dimensions
+        expected_total_dim = self.config.rl_config.state_dim
+        
+        # Pad or truncate to ensure correct dimensions
+        if len(task_features) > expected_total_dim // 2:
+            task_features = task_features[:expected_total_dim // 2]
+        else:
+            pad_size = expected_total_dim // 2 - len(task_features)
+            task_features = torch.cat([task_features, torch.zeros(pad_size)])
+        
+        if len(search_context) > expected_total_dim // 4:
+            search_context = search_context[:expected_total_dim // 4]
+        else:
+            pad_size = expected_total_dim // 4 - len(search_context)
+            search_context = torch.cat([search_context, torch.zeros(pad_size)])
+            
+        if len(reasoning_state) > expected_total_dim // 4:
+            reasoning_state = reasoning_state[:expected_total_dim // 4]
+        else:
+            pad_size = expected_total_dim // 4 - len(reasoning_state)
+            reasoning_state = torch.cat([reasoning_state, torch.zeros(pad_size)])
+        
+        # Combine all features to exact state dimension
+        state = torch.cat([task_features, search_context, reasoning_state])
+        
+        # Final padding if needed
+        if len(state) < expected_total_dim:
+            pad_size = expected_total_dim - len(state)
+            state = torch.cat([state, torch.zeros(pad_size)])
+        elif len(state) > expected_total_dim:
+            state = state[:expected_total_dim]
         
         return state
         
@@ -246,32 +271,38 @@ class DeepTreeEchoBot:
                 # Simple encoding: average of result relevance scores
                 relevance_scores = [r.get('relevance', 0.0) for r in search_results]
                 action_features[0] = np.mean(relevance_scores)
-                action_features[1] = len(search_results)
+                action_features[1] = min(len(search_results) / 10.0, 1.0)  # Normalized count
                 
         elif action_info['action_type'] == 'browse':
             # Encode browse results
             content = action_info.get('content', '')
-            action_features[2] = len(content) / 1000.0  # Normalized content length
+            action_features[2] = min(len(content) / 1000.0, 1.0)  # Normalized content length
             action_features[3] = 1.0 if content else 0.0  # Success flag
             
         elif action_info['action_type'] == 'reasoning':
             # Encode reasoning results
             reasoning_output = action_info.get('reasoning_output', '')
-            action_features[4] = len(reasoning_output) / 100.0  # Normalized output length
+            action_features[4] = min(len(reasoning_output) / 100.0, 1.0)  # Normalized output length
             action_features[5] = 1.0 if reasoning_output else 0.0  # Success flag
             
         elif action_info['action_type'] == 'synthesis':
             # Encode synthesis results
             synthesis_output = action_info.get('synthesized_result', '')
-            action_features[6] = len(synthesis_output) / 100.0
+            action_features[6] = min(len(synthesis_output) / 100.0, 1.0)
             action_features[7] = 1.0 if synthesis_output else 0.0
             
-        # Combine current state with action features
-        next_state = torch.cat([
-            current_state[:-self.config.action_feature_dim],  # Remove old action features
-            action_features
-        ])
+        # Update state by replacing action features
+        state_dim = len(current_state)
+        action_dim = len(action_features)
         
+        if state_dim >= action_dim:
+            # Replace the last action_dim elements with new action features
+            next_state = current_state.clone()
+            next_state[-action_dim:] = action_features
+        else:
+            # If state is smaller than action features, just use action features
+            next_state = action_features[:state_dim]
+            
         return next_state
         
     def _extract_search_query(self, task: str, state: torch.Tensor) -> str:
