@@ -1,0 +1,2 @@
+[console_scripts]
+deep-tree-echo-bot = deep_tree_echo_bot.cli:main

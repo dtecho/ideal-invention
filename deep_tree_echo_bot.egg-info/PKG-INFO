@@ -1,0 +1,5 @@
+Metadata-Version: 2.1
+Name: deep-tree-echo-bot
+Version: 0.1.0
+Summary: Enhanced deep-tree-echo-bot with reinforcement learning
+Requires-Python: >=3.8
