@@ -11,6 +11,7 @@ An advanced deep-tree-echo-bot implementation using machine-generated task vecto
 - **Machine-Generated Task Vectors**: Adaptive task representations that optimize for specific requirements
 - **Smooth Reward Functions**: Multi-category reward system across task completion, efficiency, quality, exploration, learning, and coherence
 - **Pure Reinforcement Learning**: No supervised fine-tuning, learns purely from environment interactions
+- **Delta-Chat Integration**: Native support for Delta-Chat messaging platform (email-based chat)
 
 ## Architecture
 
@@ -36,6 +37,9 @@ pip install -r requirements.txt
 
 # Install the package
 pip install -e .
+
+# Optional: Install Delta-Chat integration
+pip install deltachat
 ```
 
 ## Quick Start
@@ -54,6 +58,12 @@ deep-tree-echo-bot interactive
 
 # Generate configuration file
 deep-tree-echo-bot generate-config --preset cpu --output config.json
+
+# Run as Delta-Chat bot (requires deltachat package)
+deep-tree-echo-bot deltachat --email your-bot@example.com --password your-password
+
+# Generate Delta-Chat configuration
+deep-tree-echo-bot generate-deltachat-config --email your-bot@example.com --output deltachat_config.json
 ```
 
 ### Python API
@@ -83,6 +93,61 @@ async def main():
 # Run the example
 asyncio.run(main())
 ```
+
+## Delta-Chat Integration
+
+DeepTreeEchoBot now supports integration with Delta-Chat, an email-based chat platform that provides secure, decentralized messaging.
+
+### Quick Start with Delta-Chat
+
+1. **Install Delta-Chat support:**
+   ```bash
+   pip install deltachat
+   ```
+
+2. **Set up bot credentials:**
+   ```bash
+   export DELTACHAT_EMAIL="your-bot@example.com"
+   export DELTACHAT_PASSWORD="your-app-password"  # Use app password for Gmail
+   ```
+
+3. **Run the bot:**
+   ```bash
+   deep-tree-echo-bot deltachat
+   ```
+
+### Delta-Chat Bot Commands
+
+Once running, users can interact with the bot using these commands:
+
+- `/help` - Show available commands
+- `/process <task>` - Process a task with the AI bot
+- `/search <query>` - Search for information  
+- `/info` - Show bot information
+- `/status` - Show bot status
+- `/ping` - Check if bot is responsive
+
+### Configuration
+
+Generate a Delta-Chat configuration file:
+
+```bash
+deep-tree-echo-bot generate-deltachat-config --email your-bot@example.com --output deltachat_config.json
+```
+
+Then run with the configuration:
+
+```bash
+deep-tree-echo-bot deltachat --deltachat-config deltachat_config.json
+```
+
+### Examples
+
+See the `examples/deltachat/` directory for:
+- Configuration templates
+- Python integration examples
+- Setup instructions
+- Troubleshooting guide
 
 ## Configuration
 

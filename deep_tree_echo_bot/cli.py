@@ -287,6 +287,72 @@ def interactive(ctx):
 
 
 @cli.command()
+@click.option('--deltachat-config', '-dc', type=click.Path(exists=True), help='Delta-Chat configuration file')
+@click.option('--email', '-e', help='Delta-Chat email address')
+@click.option('--password', '-p', help='Delta-Chat password')
+@click.option('--db-path', help='Delta-Chat database path')
+@click.pass_context
+def deltachat(ctx, deltachat_config, email, password, db_path):
+    """Run the bot in Delta-Chat mode."""
+    try:
+        from .deltachat_integration import DeltaChatBot, DeltaChatConfig
+    except ImportError:
+        click.echo("❌ Delta-Chat integration not available. Install with: pip install deltachat")
+        return
+        
+    config = ctx.obj['config']
+    
+    # Load Delta-Chat configuration
+    if deltachat_config:
+        with open(deltachat_config, 'r') as f:
+            dc_config_dict = json.load(f)
+        dc_config = DeltaChatConfig.from_dict(dc_config_dict)
+    else:
+        # Create config from command line args or environment
+        dc_config = DeltaChatConfig.from_env()
+        
+        # Override with command line arguments
+        if email:
+            dc_config.email = email
+        if password:
+            dc_config.password = password
+        if db_path:
+            dc_config.db_path = db_path
+            
+    # Validate configuration
+    try:
+        dc_config.validate()
+    except ValueError as e:
+        click.echo(f"❌ Configuration error: {e}")
+        click.echo("Use --email and --password, or set DELTACHAT_EMAIL and DELTACHAT_PASSWORD environment variables")
+        return
+        
+    async def run_deltachat_bot():
+        deltachat_bot = DeltaChatBot(config, dc_config)
+        
+        try:
+            click.echo("🚀 Starting Delta-Chat bot...")
+            click.echo(f"📧 Email: {dc_config.email}")
+            click.echo(f"🤖 Bot Name: {dc_config.bot_name}")
+            click.echo("Press Ctrl+C to stop")
+            
+            await deltachat_bot.initialize()
+            await deltachat_bot.run()
+            
+        except KeyboardInterrupt:
+            click.echo("\n🛑 Shutdown requested by user")
+        except Exception as e:
+            click.echo(f"❌ Error running Delta-Chat bot: {e}")
+            if config.enable_debug_mode:
+                import traceback
+                traceback.print_exc()
+        finally:
+            await deltachat_bot.shutdown()
+            
+    asyncio.run(run_deltachat_bot())
+
+
+@cli.command()
 @click.option('--output', '-o', type=click.Path(), help='Output file for configuration')
 @click.option('--preset', type=click.Choice(['cpu', 'development', 'default']), default='cpu', help='Configuration preset')
 def generate_config(output, preset):
@@ -304,6 +370,51 @@ def generate_config(output, preset):
         with open(output, 'w') as f:
             json.dump(config_dict, f, indent=2)
         click.echo(f"Configuration saved to {output}")
+    else:
+        click.echo(json.dumps(config_dict, indent=2))
+
+
+@cli.command()
+@click.option('--output', '-o', type=click.Path(), help='Output file for configuration')
+@click.option('--email', '-e', help='Delta-Chat email address')
+@click.option('--preset', type=click.Choice(['basic', 'advanced']), default='basic', help='Configuration preset')
+def generate_deltachat_config(output, email, preset):
+    """Generate a Delta-Chat configuration file."""
+    try:
+        from .deltachat_integration import DeltaChatConfig
+    except ImportError:
+        click.echo("❌ Delta-Chat integration not available. Install with: pip install deltachat")
+        return
+        
+    if preset == 'basic':
+        config = DeltaChatConfig(
+            email=email or "your-bot@example.com",
+            password="your-password",
+            bot_name="DeepTreeEchoBot",
+            auto_accept_chats=True,
+            enabled_commands=["help", "process", "search", "info", "status", "ping"]
+        )
+    else:  # advanced
+        config = DeltaChatConfig(
+            email=email or "your-bot@example.com", 
+            password="your-password",
+            bot_name="DeepTreeEchoBot",
+            auto_accept_chats=True,
+            respond_to_groups=True,
+            respond_to_private=True,
+            max_message_length=2000,
+            response_timeout=30,
+            enabled_commands=["help", "process", "search", "info", "status", "ping"],
+            admin_commands=["stats", "shutdown"],
+            admin_contacts=["admin@example.com"]
+        )
+        
+    config_dict = config.to_dict()
+    
+    if output:
+        with open(output, 'w') as f:
+            json.dump(config_dict, f, indent=2)
+        click.echo(f"Delta-Chat configuration saved to {output}")
     else:
         click.echo(json.dumps(config_dict, indent=2))
 
