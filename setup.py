@@ -17,6 +17,7 @@ setup(
         "click>=8.1.0",
         "pydantic>=1.10.0",
         "typing-extensions>=4.3.0",
+        "deltachat>=1.140.0",
     ],
     python_requires=">=3.8",
     entry_points={

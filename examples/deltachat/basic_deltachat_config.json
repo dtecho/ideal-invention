@@ -1,0 +1,28 @@
+{
+  "email": "your-bot@example.com",
+  "password": "your-password",
+  "bot_name": "DeepTreeEchoBot",
+  "command_prefix": "/",
+  "auto_accept_chats": true,
+  "respond_to_groups": true,
+  "respond_to_private": true,
+  "max_message_length": 2000,
+  "response_timeout": 30,
+  "enable_typing_indicator": true,
+  "enabled_commands": [
+    "help",
+    "process",
+    "search",
+    "info",
+    "status",
+    "ping"
+  ],
+  "admin_commands": [
+    "stats"
+  ],
+  "admin_contacts": [
+    "admin@example.com"
+  ],
+  "db_path": "deltachat_bot.db",
+  "blob_dir": "deltachat_blobs"
+}

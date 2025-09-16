@@ -9,6 +9,7 @@ This package implements an advanced deep-tree-echo-bot with:
 - Machine-generated Task Vectors
 - Smooth Reward Functions
 - Pure Reinforcement Learning (no supervised fine-tuning)
+- Delta-Chat integration for messaging platform support
 """
 
 __version__ = "0.1.0"
@@ -23,13 +24,30 @@ from .browsing.web_browser import WebBrowser
 from .utils.task_vectors import TaskVectorGenerator
 from .utils.reward_functions import SmoothRewardCalculator
 
-__all__ = [
-    'DeepTreeEchoBot',
-    'BotConfig',
-    'RLAgent',
-    'AgenticSearchEngine', 
-    'TaskProcessor',
-    'WebBrowser',
-    'TaskVectorGenerator',
-    'SmoothRewardCalculator'
-]
+# Delta-Chat integration (optional import)
+try:
+    from .deltachat_integration import DeltaChatBot, DeltaChatConfig
+    __all__ = [
+        'DeepTreeEchoBot',
+        'BotConfig',
+        'RLAgent',
+        'AgenticSearchEngine', 
+        'TaskProcessor',
+        'WebBrowser',
+        'TaskVectorGenerator',
+        'SmoothRewardCalculator',
+        'DeltaChatBot',
+        'DeltaChatConfig'
+    ]
+except ImportError:
+    # Delta-Chat integration not available
+    __all__ = [
+        'DeepTreeEchoBot',
+        'BotConfig',
+        'RLAgent',
+        'AgenticSearchEngine', 
+        'TaskProcessor',
+        'WebBrowser',
+        'TaskVectorGenerator',
+        'SmoothRewardCalculator'
+    ]
